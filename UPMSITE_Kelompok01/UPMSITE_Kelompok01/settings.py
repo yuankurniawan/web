@@ -27,7 +27,7 @@ SECRET_KEY = '&khznnu*z)i2qtkif!nvjhii*2v@0g$5cgd)-qvs$t^vse=+9c'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['104.248.159.140', '.localhost']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'home',
     'widget_tweaks',
-    'django_bootstrap_breadcrumbs',
 ]
 
 AUTH_USER_MODEL = 'home.CustomUser'
@@ -125,8 +124,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-        "/var/www/upmsite_kelompok01/UPMSITE_Kelompok01/static"
-]
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'static' / 'media'

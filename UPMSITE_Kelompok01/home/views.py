@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404, HttpResponseRe
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse
 from . import models, forms
-from django.db.models import Q
+
 
 
 # Create your views here.
@@ -29,6 +29,8 @@ def page_login(request):
         return render(request, 'login.html', context)
     
 def dashboardForm(request):
+    if request.user.is_authenticated:
+        return redirect('homepage')
 
     form = forms.inputFileInfo()
     context = {
@@ -36,13 +38,24 @@ def dashboardForm(request):
     }
 
     if request.method == 'POST':
-            form = forms.inputFileInfo(request.POST, request.FILES)
-            if form.is_valid():
-                form.save()
+            post = request.POST
+            nama_file = post['nama_file']
+            desc_file = post['desc_file']
+            link_file = post['link_file']
+            nama_folder = models.baruFolder.objects.get(id = post['nama_folder'])
+            new_file = models.baruFile(
+                nama_file = nama_file,
+                desc_file = desc_file,
+                link_file = link_file,
+                nama_folder = nama_folder
+            )
+            new_file.save()
 
     return render(request, 'editForm.html', context)
 
 def dashboardFolderForm(request):
+    if not request.user.is_authenticated:
+        return redirect('homepage')
 
     form = forms.inputFolderInfo()
     context = {
@@ -65,6 +78,7 @@ def dashboardFolderForm(request):
     return render(request, 'editFolderForm.html', context)
 
 def homepage(request):
+    
     folder = models.FolderUtama.objects.all()
 
     if request.user.is_authenticated == False:
@@ -114,13 +128,15 @@ def homepage(request):
         return render(request, 'card.html', context)
 
 def informasiUmum(request):
+    if not request.user.is_authenticated:
+        return redirect('homepage')
 
     folder = models.baruFolder.objects.filter(baseFolder_nama = 1)
     # print(folder.baseFolder_nama, '#####')
     context = {
         'folder': folder,
         'id': 1,
-        "informasi_umum": "active"
+        'role' : request.user.status == 'Admin'
     }
 
     return render(request, 'card01.html', context)
@@ -131,43 +147,48 @@ def akreditasiUmum(request):
     # print(folder.baseFolder_nama, '#####')
     context = {
         'folder': folder,
-        'id': 7,
-        "akreditasi": "active"
+        'id': 7
     }
 
     return render(request, 'card01.html', context)
 
 def auditUmum(request):
-
+    if not request.user.is_authenticated:
+        return redirect('homepage')
+    
     folder = models.baruFolder.objects.get(nama_folder = 'Audit Umum')
     files = models.baruFile.objects.filter(nama_folder = folder)
 
     context = {
         'files': files,
-        "audit": "active"
+        'role': request.user.status == 'Admin'
     }
     return render(request, 'list.html', context)
 
 def auditProdi(request):
+    if not request.user.is_authenticated:
+        return redirect('homepage')
 
     folder = models.baruFolder.objects.filter(baseFolder_nama = 25)
     # print(folder.baseFolder_nama, '#####')
     context = {
         'folder': folder,
         'id': 25,
-        "audit": "active"
+        'role': request.user.status == 'Admin'
     }
 
     return render(request, 'card01.html', context)
 
 def akreditasiProdi(request):
+    if not request.user.is_authenticated:
+        return redirect('homepage')
 
     folder = models.baruFolder.objects.filter(baseFolder_nama = 19)
     # print(folder.baseFolder_nama, '#####')
     context = {
         'folder': folder,
         'id': 1,
-        "akreditasi": "active"
+        'role': request.user.status == 'Admin'
     }
 
     return render(request, 'card01.html', context)
@@ -179,7 +200,7 @@ def updateFile(request, file_id, folder_id):
 
     form.nama_file = files.nama_file
     form.desc_file = files.desc_file
-    form.upload_file = files.upload_file
+    form.link_file = files.link_file
     form.nama_folder = files.nama_folder
 
     context = {
@@ -275,9 +296,8 @@ def delete_folder_view(request, id):
 def informasiUmumDetailView(request, id): 
     # dictionary for initial data with  
     # field names as keys 
-    context ={"informasi_umum": "active"} 
-    print(id)
-
+    context ={} 
+  
     # fetch the object related to passed id 
     obj = get_object_or_404(models.FolderUtama, id = id)
     x = str(obj)
@@ -297,25 +317,17 @@ def informasiUmumDetailView(request, id):
 
 def informasiUmumDetailView1(request, id): 
     # dictionary for initial data with  
-    # field names as keys
-    is_search = request.method=='POST' 
-    context ={
-                "informasi_umum": "active",
-            } 
-    
+    # field names as keys 
+    context ={} 
+  
     # fetch the object related to passed id 
     obj = get_object_or_404(models.baruFolder, id = id)
     x = str(obj)
     print(obj)
     if x == "Peraturan - Peraturan":
         folder = models.baruFolder.objects.get(nama_folder = 'Peraturan - Peraturan')
-        print(folder, '####')
         files = models.baruFile.objects.filter(nama_folder = folder)
-        if is_search:
-            search = request.POST['search']
-            files = models.baruFile.objects.filter(Q(nama_folder = folder) & Q(nama_file__contains = search) | Q(desc_file__contains = search))
-            print(search)
-        print(files, '#####')
+        # print(folder.baseFolder_nama, '#####')
         context = {
             'files': files,
         }
@@ -343,10 +355,6 @@ def informasiUmumDetailView1(request, id):
         folder = models.baruFolder.objects.get(nama_folder = 'Buku Panduan')
         files = models.baruFile.objects.filter(nama_folder = folder)
         # print(folder.baseFolder_nama, '#####')
-        if is_search:
-            search = request.POST['search']
-            files = models.baruFile.objects.filter(Q(nama_folder = folder) & Q(nama_file__contains = search) | Q(desc_file__contains = search))
-            print(search)
         context = {
             'files': files,
         }
@@ -356,10 +364,6 @@ def informasiUmumDetailView1(request, id):
         folder = models.baruFolder.objects.get(nama_folder = 'Lain - Lain')
         files = models.baruFile.objects.filter(nama_folder = folder)
         # print(folder.baseFolder_nama, '#####')
-        if is_search:
-            search = request.POST['search']
-            files = models.baruFile.objects.filter(Q(nama_folder = folder) & Q(nama_file__contains = search) | Q(desc_file__contains = search))
-            print(search)
         context = {
             'files': files,
         }
@@ -369,10 +373,6 @@ def informasiUmumDetailView1(request, id):
         folder = models.baruFolder.objects.get(nama_folder = 'AMI 20182')
         files = models.baruFile.objects.filter(nama_folder = folder)
         # print(folder.baseFolder_nama, '#####')
-        if is_search:
-            search = request.POST['search']
-            files = models.baruFile.objects.filter(Q(nama_folder = folder) & Q(nama_file__contains = search) | Q(desc_file__contains = search))
-            print(search)
         context = {
             'files': files,
         }
@@ -381,10 +381,6 @@ def informasiUmumDetailView1(request, id):
     elif x == "AMI 20191":
         folder = models.baruFolder.objects.get(nama_folder = 'AMI 20191')
         files = models.baruFile.objects.filter(nama_folder = folder)
-        if is_search:
-            search = request.POST['search']
-            files = models.baruFile.objects.filter(Q(nama_folder = folder) & Q(nama_file__contains = search) | Q(desc_file__contains = search))
-            print(search)
         # print(folder.baseFolder_nama, '#####')
         context = {
             'files': files,
@@ -394,10 +390,6 @@ def informasiUmumDetailView1(request, id):
     elif x == "AMI 20192":
         folder = models.baruFolder.objects.get(nama_folder = 'AMI 20192')
         files = models.baruFile.objects.filter(nama_folder = folder)
-        if is_search:
-            search = request.POST['search']
-            files = models.baruFile.objects.filter(Q(nama_folder = folder) & Q(nama_file__contains = search) | Q(desc_file__contains = search))
-            print(search)
         # print(folder.baseFolder_nama, '#####')
         context = {
             'files': files,
@@ -409,10 +401,6 @@ def informasiUmumDetailView1(request, id):
         folder = models.baruFolder.objects.get(nama_folder = 'AMI 20201')
         files = models.baruFile.objects.filter(nama_folder = folder)
         # print(folder.baseFolder_nama, '#####')
-        if is_search:
-            search = request.POST['search']
-            files = models.baruFile.objects.filter(Q(nama_folder = folder) & Q(nama_file__contains = search) | Q(desc_file__contains = search))
-            print(search)
         context = {
             'files': files,
         }
@@ -422,10 +410,6 @@ def informasiUmumDetailView1(request, id):
         folder = models.baruFolder.objects.get(nama_folder = 'AMI 20202')
         files = models.baruFile.objects.filter(nama_folder = folder)
         # print(folder.baseFolder_nama, '#####')
-        if is_search:
-            search = request.POST['search']
-            files = models.baruFile.objects.filter(Q(nama_folder = folder) & Q(nama_file__contains = search) | Q(desc_file__contains = search))
-            print(search)
         context = {
             'files': files,
         }
@@ -435,10 +419,6 @@ def informasiUmumDetailView1(request, id):
         folder = models.baruFolder.objects.get(nama_folder = 'Instrumen IAPS4.0 BAN PT')
         files = models.baruFile.objects.filter(nama_folder = folder)
         # print(folder.baseFolder_nama, '#####')
-        if is_search:
-            search = request.POST['search']
-            files = models.baruFile.objects.filter(Q(nama_folder = folder) & Q(nama_file__contains = search) | Q(desc_file__contains = search))
-            print(search)
         context = {
             'files': files,
         }
@@ -448,10 +428,6 @@ def informasiUmumDetailView1(request, id):
         folder = models.baruFolder.objects.get(nama_folder = 'Sosialisasi IAPS4.0')
         files = models.baruFile.objects.filter(nama_folder = folder)
         # print(folder.baseFolder_nama, '#####')
-        if is_search:
-            search = request.POST['search']
-            files = models.baruFile.objects.filter(Q(nama_folder = folder) & Q(nama_file__contains = search) | Q(desc_file__contains = search))
-            print(search)
         context = {
             'files': files,
         }
@@ -461,10 +437,6 @@ def informasiUmumDetailView1(request, id):
         folder = models.baruFolder.objects.get(nama_folder = 'MoM Komite Akreditasi')
         files = models.baruFile.objects.filter(nama_folder = folder)
         # print(folder.baseFolder_nama, '#####')
-        if is_search:
-            search = request.POST['search']
-            files = models.baruFile.objects.filter(Q(nama_folder = folder) & Q(nama_file__contains = search) | Q(desc_file__contains = search))
-            print(search)
         context = {
             'files': files,
         }

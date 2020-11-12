@@ -17,7 +17,7 @@ class CustomUserLogin(forms.ModelForm):
 class inputFileInfo(forms.ModelForm):
     class Meta:
         model = models.baruFile
-        fields = {'nama_file', 'desc_file', 'upload_file', 'nama_folder'}
+        fields = {'nama_file', 'desc_file', 'link_file', 'nama_folder'}
 
         '''
         widgets = {

@@ -31,7 +31,7 @@ class baruFile(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
     nama_file = models.CharField(default='', max_length=256)
     desc_file = models.TextField()
-    upload_file = models.FileField(max_length=50, null=True)
+    link_file = models.CharField(default='', max_length=256)
     nama_folder = models.ForeignKey(baruFolder, on_delete=models.CASCADE)
 
     def __str__(self):
