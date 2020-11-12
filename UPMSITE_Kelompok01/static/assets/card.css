@@ -1,0 +1,16 @@
+.dark-nav{
+    background-color: blue;
+}
+
+.title-logo{
+    height: 50px;
+    width: 180px;
+}
+
+.row {
+    display: flex;
+  }
+  
+  .column {
+    flex: 20%;
+  }

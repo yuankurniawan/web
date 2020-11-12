@@ -1,0 +1,24 @@
+.box-style{
+    margin: auto;
+    margin-top: 100px;
+    border-radius: 5px;
+    background-color: rgba(25, 48, 96, 0.8);
+    width: 35rem;
+    height: 35rem;
+    max-height: 80vh;
+    max-width: 32.5vw;
+}
+
+.title-logo{
+    height: 135px;
+    width: 450px;
+    margin-top: 30px;
+    margin-bottom: 10px;
+    max-width: -webkit-fill-available;
+    max-height: 90px;
+}
+
+body{
+    background-repeat: no-repeat;
+    background-size: cover;
+}
